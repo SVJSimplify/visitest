@@ -5,16 +5,14 @@
 @tailwind utilities;
 
 /* ============================================================================
-   Visitour — Global styles
+   Visitour — Global styles + Animations + Responsive
    ============================================================================ */
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
-    /* Smooth scrolling everywhere */
     scroll-behavior: smooth;
-    /* Prevent horizontal overflow on mobile */
     overflow-x: hidden;
   }
 
@@ -30,18 +28,19 @@
       radial-gradient(ellipse 600px 400px at 0% 80%, rgba(249, 212, 35, 0.07), transparent 50%);
     background-attachment: fixed;
     min-height: 100vh;
-    /* Safe area support for notched phones */
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
     overflow-x: hidden;
   }
 
-  /* Prevent iOS zoom on focus */
-  input, textarea, select {
-    font-size: 16px;
+  /* Safe-area: notch / Dynamic Island / home bar */
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
-  /* Native scrollbar polish — desktop only */
+  /* Prevent iOS zoom on focus */
+  input, textarea, select { font-size: 16px; }
+
+  /* Scrollbar — desktop only */
   @media (min-width: 768px) {
     ::-webkit-scrollbar { width: 10px; height: 10px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -53,57 +52,39 @@
     ::-webkit-scrollbar-thumb:hover { background: #e8c00f; }
   }
 
-  /* Selection colour — strong gold */
-  ::selection {
-    background: rgba(249, 212, 35, 0.55);
-    color: #400a06;
-  }
+  ::selection { background: rgba(249, 212, 35, 0.55); color: #400a06; }
 
-  /* All interactive elements: min 44px touch target on mobile */
+  /* Touch targets */
   @media (max-width: 767px) {
-    button, a, [role="button"] {
-      min-height: 44px;
-    }
+    button, a, [role="button"] { min-height: 44px; }
   }
 }
 
+/* ============================================================================
+   Components
+   ============================================================================ */
 @layer components {
-  /* Gold hairline accent — brighter */
+
+  /* ── Brand elements ─────────────────────────────────────────────── */
   .gold-rule {
     height: 2px;
     background: linear-gradient(90deg, transparent 0%, #f9d423 40%, #e8c00f 60%, transparent 100%);
   }
-
-  /* The brand stripe used at the top of every card */
   .brand-stripe {
     height: 4px;
     background: linear-gradient(90deg, #8e0e00 0%, #f9d423 45%, #f9d423 55%, #8e0e00 100%);
   }
-
-  /* Gold badge / pill */
   .badge-gold {
     @apply inline-flex items-center gap-1 bg-gold-100 text-gold-800 border border-gold-300 font-semibold;
     font-size: 11px;
     padding: 2px 10px;
     border-radius: 999px;
   }
+  .card-gold      { @apply bg-white rounded-2xl border-2 border-gold-400 shadow-elevated overflow-hidden; }
+  .focus-gold     { @apply focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-1; }
+  .card-branded   { @apply bg-white rounded-2xl border border-ink-200 shadow-elevated overflow-hidden; }
 
-  /* Gold highlight border on cards — use on hover or active state */
-  .card-gold {
-    @apply bg-white rounded-2xl border-2 border-gold-400 shadow-elevated overflow-hidden;
-  }
-
-  /* Gold focus ring — add to interactive elements */
-  .focus-gold {
-    @apply focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-1;
-  }
-
-  /* Card with brand stripe header — apply to a wrapper div */
-  .card-branded {
-    @apply bg-white rounded-2xl border border-ink-200 shadow-elevated overflow-hidden;
-  }
-
-  /* Animated gradient background for hero/landing areas */
+  /* ── Animated background ────────────────────────────────────────── */
   .bg-brand-mesh {
     background:
       radial-gradient(circle at 20% 0%, rgba(142, 14, 0, 0.08), transparent 50%),
@@ -115,7 +96,6 @@
     animation: brand-mesh-shift 24s ease-in-out infinite;
   }
 
-  /* Gold text shimmer — for headings */
   .text-gold-shimmer {
     background: linear-gradient(90deg, #e8c00f 0%, #f9d423 50%, #ca9a06 100%);
     -webkit-background-clip: text;
@@ -123,156 +103,178 @@
     background-clip: text;
   }
 
-  /* ── Mobile Modal — bottom sheet on small screens ───────────────── */
-  @media (max-width: 639px) {
-    /* The overlay */
-    [data-modal-overlay] {
-      align-items: flex-end !important;
-    }
+  /* ── Card hover lift — wrap a card with this class ─────────────── */
+  .card-lift {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px rgba(0,0,0,0.12), 0 4px 8px -2px rgba(0,0,0,0.06);
+  }
+  .card-lift:active { transform: translateY(0); }
 
-    /* The sheet panel */
-    [data-modal-panel] {
-      border-radius: 20px 20px 0 0 !important;
-      max-height: 92dvh !important;
+  /* ── Scan success flash ─────────────────────────────────────────── */
+  .scan-success { animation: scan-flash-green 0.6s ease-out both; }
+  .scan-error   { animation: scan-flash-red   0.6s ease-out both; }
+  .scan-warn    { animation: scan-flash-amber 0.6s ease-out both; }
+
+  /* ── Skeleton loader ────────────────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-wave 1.5s ease-in-out infinite;
+    border-radius: 6px;
+  }
+
+  /* ── Number counter — for stats badges ─────────────────────────── */
+  .badge-pop { animation: badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  /* ── Nav item active indicator ──────────────────────────────────── */
+  .nav-indicator {
+    position: relative;
+    overflow: hidden;
+  }
+  .nav-indicator::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%) scaleY(0);
+    width: 3px; height: 60%;
+    background: #f9d423;
+    border-radius: 0 2px 2px 0;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .nav-indicator.active::after { transform: translateY(-50%) scaleY(1); }
+
+  /* ── Mobile bottom nav for admin ────────────────────────────────── */
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #0a0a0a;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 50;
+    display: none;
+  }
+  @media (max-width: 767px) { .mobile-bottom-nav { display: flex; } }
+
+  /* ── Mobile sidebar overlay ─────────────────────────────────────── */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── Sidebar drawer slide-in on mobile ──────────────────────────── */
+  @media (max-width: 767px) {
+    .admin-sidebar-drawer {
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .admin-sidebar-drawer.open {
+      transform: translateX(0);
+    }
+  }
+
+  /* ── Modal — bottom sheet on mobile ─────────────────────────────── */
+  @media (max-width: 639px) {
+    .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+    .modal-panel {
       width: 100% !important;
       max-width: 100% !important;
-      margin: 0 !important;
-      padding-bottom: env(safe-area-inset-bottom) !important;
+      max-height: 92dvh !important;
+      border-radius: 20px 20px 0 0 !important;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      animation: sheet-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both !important;
     }
-
     /* Drag handle pill */
-    [data-modal-panel]::before {
+    .modal-panel::before {
       content: '';
       display: block;
-      width: 40px;
-      height: 4px;
+      width: 36px; height: 4px;
       background: #d4d4d4;
       border-radius: 99px;
-      margin: 12px auto 4px;
-      flex-shrink: 0;
+      margin: 12px auto 0;
     }
   }
 
-  /* ── Scanner page mobile fixes ───────────────────────────────────── */
-  @media (max-width: 639px) {
-    /* Full-width scanner viewport on mobile */
-    #reader {
-      padding: 8px !important;
-    }
-    #reader video {
-      border-radius: 10px;
-    }
-
-    /* Make gate selector more touch-friendly */
-    .scanner-gate-select select {
-      min-height: 44px;
-      padding-top: 10px;
-      padding-bottom: 10px;
-    }
+  /* ── Table scroll on mobile ─────────────────────────────────────── */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
+  .table-scroll table { min-width: 540px; }
 
-  /* ── Admin layout — hide sidebar text on small tablets ──────────── */
-  @media (max-width: 1023px) {
-    .sidebar-label {
-      display: none;
-    }
-  }
-
-  /* ── Visitor form — full-width stacked layout on mobile ─────────── */
-  @media (max-width: 639px) {
-    .visitor-form-grid {
-      grid-template-columns: 1fr !important;
-    }
-  }
-
-  /* ── Photo capture — taller viewport on mobile for easier capture ── */
-  @media (max-width: 639px) {
-    .photo-capture-viewport {
-      aspect-ratio: 3 / 4 !important; /* portrait crop on phones */
-    }
-  }
-
-  /* ── QR display — larger on mobile so visitor can show it ────────── */
-  @media (max-width: 639px) {
-    .qr-display-wrapper svg,
-    .qr-display-wrapper canvas {
-      width: 220px !important;
-      height: 220px !important;
-    }
-  }
-
-  /* Print styles for visitor badges */
+  /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
     body * { visibility: hidden; }
     .print-area, .print-area * { visibility: visible; }
-    .print-area {
-      position: absolute;
-      left: 0; top: 0;
-      width: 100%;
-    }
+    .print-area { position: absolute; left: 0; top: 0; width: 100%; }
   }
 }
 
+/* ============================================================================
+   Utilities
+   ============================================================================ */
 @layer utilities {
-  /* Smooth shimmer for loading skeletons (optional) */
+
+  /* Shimmer loader */
   .shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(212, 212, 212, 0.0) 0%,
-      rgba(212, 212, 212, 0.4) 50%,
-      rgba(212, 212, 212, 0.0) 100%
-    );
+    background: linear-gradient(90deg, rgba(212,212,212,0) 0%, rgba(212,212,212,0.4) 50%, rgba(212,212,212,0) 100%);
     background-size: 200% 100%;
     animation: shimmer 1.6s linear infinite;
   }
 
-  /* For elements that should fade in on first paint */
-  .animate-rise {
-    animation: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
+  /* Entrance animations */
+  .animate-rise    { animation: rise     0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .animate-fade-in { animation: fadeIn   0.18s ease-out both; }
+  .animate-pop     { animation: pop      0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .animate-blur-in { animation: blur-in  0.35s ease-out both; }
+  .animate-swing   { animation: swing    0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 
-  /* Stagger children: each child fades in slightly later */
+  /* Stagger entrance for lists */
   .stagger > * {
     opacity: 0;
-    animation: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  .stagger > *:nth-child(1) { animation-delay: 0.04s; }
-  .stagger > *:nth-child(2) { animation-delay: 0.10s; }
-  .stagger > *:nth-child(3) { animation-delay: 0.16s; }
-  .stagger > *:nth-child(4) { animation-delay: 0.22s; }
-  .stagger > *:nth-child(5) { animation-delay: 0.28s; }
-  .stagger > *:nth-child(6) { animation-delay: 0.34s; }
-  .stagger > *:nth-child(7) { animation-delay: 0.40s; }
-  .stagger > *:nth-child(8) { animation-delay: 0.46s; }
+  .stagger > *:nth-child(1)  { animation-delay: 0.03s; }
+  .stagger > *:nth-child(2)  { animation-delay: 0.08s; }
+  .stagger > *:nth-child(3)  { animation-delay: 0.13s; }
+  .stagger > *:nth-child(4)  { animation-delay: 0.18s; }
+  .stagger > *:nth-child(5)  { animation-delay: 0.23s; }
+  .stagger > *:nth-child(6)  { animation-delay: 0.28s; }
+  .stagger > *:nth-child(7)  { animation-delay: 0.33s; }
+  .stagger > *:nth-child(8)  { animation-delay: 0.38s; }
+  .stagger > *:nth-child(9)  { animation-delay: 0.43s; }
+  .stagger > *:nth-child(10) { animation-delay: 0.48s; }
 
-  /* Pulse-glow for the live indicator dot */
-  .pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
+  /* Pulse-glow for live dot */
+  .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 
-  /* Safe-area bottom padding — use on fixed bottom bars */
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  /* Safe area helpers */
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pt-safe { padding-top:    env(safe-area-inset-top); }
+  .pl-safe { padding-left:   env(safe-area-inset-left); }
+  .pr-safe { padding-right:  env(safe-area-inset-right); }
 
-  /* Safe-area top padding — use on fixed headers */
-  .pt-safe {
-    padding-top: env(safe-area-inset-top);
-  }
+  /* iOS momentum scroll */
+  .scroll-ios { -webkit-overflow-scrolling: touch; overflow-y: auto; }
 
-  /* Scrollable container that works smoothly on iOS */
-  .scroll-ios {
-    -webkit-overflow-scrolling: touch;
-    overflow-y: auto;
-  }
-
-  /* Respect users who prefer reduced motion */
+  /* Reduce motion */
   @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -281,205 +283,68 @@
 }
 
 /* ============================================================================
-   Mobile-first responsive overrides
+   Mobile-first layout overrides
    ============================================================================ */
 
-/* ── Header / TopBar ───────────────────────────────────────────────────────── */
+/* ── Inputs ─────────────────────────────────────────────────────────────────── */
 @media (max-width: 639px) {
-  /* Keep header at a comfortable height on phones */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    /* Top safe area for Dynamic Island / notch */
-    padding-top: env(safe-area-inset-top);
-  }
-
-  /* Prevent text overflow in header titles */
-  header span, header h1 {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 50vw;
-  }
-}
-
-/* ── Cards — remove side margins on very small phones ──────────────────────── */
-@media (max-width: 374px) {
-  .rounded-2xl, .rounded-xl {
-    border-radius: 12px;
-  }
-}
-
-/* ── Inputs — proper sizing and focus on mobile ─────────────────────────────── */
-@media (max-width: 639px) {
-  input[type="text"],
-  input[type="tel"],
-  input[type="email"],
-  input[type="password"],
-  textarea,
-  select {
-    font-size: 16px !important; /* prevents iOS zoom on focus */
+  input[type="text"], input[type="tel"], input[type="email"],
+  input[type="password"], textarea, select {
+    font-size: 16px !important;
     min-height: 44px;
     border-radius: 10px;
   }
-
-  textarea {
-    min-height: 80px;
-  }
+  textarea { min-height: 80px; }
 }
 
-/* ── Buttons — full-width on mobile in forms ──────────────────────────────── */
+/* ── Sticky headers with safe-area ─────────────────────────────────────────── */
 @media (max-width: 639px) {
-  /* Only buttons that are already block-level or in flex column */
-  .btn-mobile-full {
-    width: 100% !important;
-  }
-
-  /* All primary action buttons in forms should feel chunky */
-  button[type="submit"],
-  .btn-primary {
-    min-height: 48px;
-    font-size: 15px;
+  header {
+    position: sticky;
+    top: 0; z-index: 40;
+    padding-top: env(safe-area-inset-top);
   }
 }
 
-/* ── Scanner page — tighter layout on phones ────────────────────────────────── */
-@media (max-width: 639px) {
-  /* Reduce bottom padding since we have safe area */
-  .scanner-page {
-    padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  }
-
-  /* QR reader box: make it feel native */
-  #reader > div {
-    border: none !important;
-    box-shadow: none !important;
-  }
-
-  /* Hide the noisy html5-qrcode branding/borders */
-  #reader img[alt="Info icon"],
-  #reader > div > div:last-child {
-    display: none !important;
-  }
+/* ── Admin layout — content offset ─────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .admin-main { margin-left: 240px; }
 }
-
-/* ── Admin sidebar — bottom nav on mobile ──────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Sidebar becomes a fixed bottom tab bar */
-  .admin-sidebar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto !important;
-    height: auto;
-    flex-direction: row !important;
-    border-right: none !important;
-    border-top: 1px solid #e5e5e5;
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 50;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    background: white;
-  }
-
-  .admin-sidebar nav {
-    flex-direction: row !important;
-    width: 100%;
-    justify-content: space-around;
-    padding: 0;
-    gap: 0;
-  }
-
-  /* Each nav item becomes a column */
-  .admin-sidebar a,
-  .admin-sidebar button {
-    flex-direction: column !important;
-    gap: 2px !important;
-    font-size: 10px !important;
-    padding: 8px 4px !important;
-    min-width: 56px;
-    text-align: center;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0 !important;
-    min-height: 56px;
-  }
-
-  /* Admin content area: account for bottom nav */
-  .admin-content {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
+  .admin-main {
+    margin-left: 0 !important;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
   }
 }
 
-/* ── Visitor app — centered card with max width ─────────────────────────────── */
+/* ── QR reader cleanup ──────────────────────────────────────────────────────── */
+#reader { padding: 12px !important; }
+#reader > div { border: none !important; box-shadow: none !important; }
+#reader img[alt="Info icon"],
+#reader > div > div:last-child { display: none !important; }
+#reader video { border-radius: 10px; }
+
+/* ── Cards — smaller radius on tiny phones ─────────────────────────────────── */
+@media (max-width: 374px) {
+  .rounded-2xl { border-radius: 14px; }
+  .rounded-xl  { border-radius: 10px; }
+}
+
+/* ── Stats grid — 2 columns on mobile ──────────────────────────────────────── */
 @media (max-width: 639px) {
-  .visitor-app-card {
-    border-radius: 16px 16px 0 0 !important;
-    min-height: calc(100dvh - 80px);
-  }
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
 }
 
-/* ── Landing/login page — comfortable on phone ──────────────────────────────── */
-@media (max-width: 639px) {
-  .landing-card {
-    margin: 12px;
-    border-radius: 20px;
-  }
+/* ── Page transitions — wrap page root with .page-enter ────────────────────── */
+.page-enter { animation: page-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-  .landing-logo {
-    width: 56px !important;
-    height: 56px !important;
-  }
-}
+/* ============================================================================
+   Keyframes
+   ============================================================================ */
 
-/* ── Modals — slide up from bottom on mobile ────────────────────────────────── */
-@media (max-width: 639px) {
-  /* Overlay becomes dark full-screen */
-  .modal-overlay {
-    align-items: flex-end !important;
-    padding: 0 !important;
-  }
-
-  /* Panel slides up like a native sheet */
-  .modal-panel {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 92dvh !important;
-    border-radius: 20px 20px 0 0 !important;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    animation: sheet-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-}
-
-/* ── Tables — horizontal scroll on mobile ──────────────────────────────────── */
-@media (max-width: 767px) {
-  .table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
-  }
-
-  table {
-    min-width: 520px;
-  }
-}
-
-/* ── Stats cards — 2-column grid on mobile ──────────────────────────────────── */
-@media (max-width: 639px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-  }
-}
-
-/* Keyframes (outside @layer so they're always available) */
 @keyframes brand-mesh-shift {
   0%, 100% { background-position: 0% 0%; }
-  50%      { background-position: 100% 100%; }
+  50%       { background-position: 100% 100%; }
 }
 
 @keyframes shimmer {
@@ -487,20 +352,36 @@
   100% { background-position:  200% 0; }
 }
 
+@keyframes skeleton-wave {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 @keyframes rise {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
-    opacity: 1;
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-    opacity: 0.85;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pop {
+  0%   { opacity: 0; transform: scale(0.88); }
+  60%  { transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes blur-in {
+  from { opacity: 0; filter: blur(6px); transform: scale(0.98); }
+  to   { opacity: 1; filter: blur(0);   transform: scale(1); }
+}
+
+@keyframes swing {
+  0%   { transform: rotate(-6deg) scale(0.9); opacity: 0; }
+  60%  { transform: rotate(3deg) scale(1.02); }
+  100% { transform: rotate(0deg) scale(1);    opacity: 1; }
 }
 
 @keyframes scale-in {
@@ -510,11 +391,48 @@
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50%      { transform: translateY(-4px); }
+  50%       { transform: translateY(-4px); }
 }
 
-/* Mobile bottom-sheet slide-up animation */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); opacity: 1; }
+  50%       { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); opacity: 0.85; }
+}
+
+@keyframes badge-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  70%  { transform: scale(1.25); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes scan-flash-green {
+  0%   { background-color: rgba(16, 185, 129, 0.25); }
+  100% { background-color: transparent; }
+}
+@keyframes scan-flash-red {
+  0%   { background-color: rgba(239, 68, 68, 0.2); }
+  100% { background-color: transparent; }
+}
+@keyframes scan-flash-amber {
+  0%   { background-color: rgba(245, 158, 11, 0.2); }
+  100% { background-color: transparent; }
+}
+
 @keyframes sheet-up {
-  from { transform: translateY(100%); opacity: 0; }
+  from { transform: translateY(100%); opacity: 0.7; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+  0%   { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
