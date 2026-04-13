@@ -12,6 +12,10 @@
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    /* Smooth scrolling everywhere */
+    scroll-behavior: smooth;
+    /* Prevent horizontal overflow on mobile */
+    overflow-x: hidden;
   }
 
   body {
@@ -26,6 +30,10 @@
       radial-gradient(ellipse 600px 400px at 0% 80%, rgba(249, 212, 35, 0.07), transparent 50%);
     background-attachment: fixed;
     min-height: 100vh;
+    /* Safe area support for notched phones */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    overflow-x: hidden;
   }
 
   /* Prevent iOS zoom on focus */
@@ -33,20 +41,29 @@
     font-size: 16px;
   }
 
-  /* Native scrollbar polish */
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb {
-    background: #f9d423;
-    border-radius: 8px;
-    border: 2px solid #fafafa;
+  /* Native scrollbar polish — desktop only */
+  @media (min-width: 768px) {
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: #f9d423;
+      border-radius: 8px;
+      border: 2px solid #fafafa;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #e8c00f; }
   }
-  ::-webkit-scrollbar-thumb:hover { background: #e8c00f; }
 
   /* Selection colour — strong gold */
   ::selection {
     background: rgba(249, 212, 35, 0.55);
     color: #400a06;
+  }
+
+  /* All interactive elements: min 44px touch target on mobile */
+  @media (max-width: 767px) {
+    button, a, [role="button"] {
+      min-height: 44px;
+    }
   }
 }
 
@@ -106,6 +123,86 @@
     background-clip: text;
   }
 
+  /* ── Mobile Modal — bottom sheet on small screens ───────────────── */
+  @media (max-width: 639px) {
+    /* The overlay */
+    [data-modal-overlay] {
+      align-items: flex-end !important;
+    }
+
+    /* The sheet panel */
+    [data-modal-panel] {
+      border-radius: 20px 20px 0 0 !important;
+      max-height: 92dvh !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding-bottom: env(safe-area-inset-bottom) !important;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Drag handle pill */
+    [data-modal-panel]::before {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 4px;
+      background: #d4d4d4;
+      border-radius: 99px;
+      margin: 12px auto 4px;
+      flex-shrink: 0;
+    }
+  }
+
+  /* ── Scanner page mobile fixes ───────────────────────────────────── */
+  @media (max-width: 639px) {
+    /* Full-width scanner viewport on mobile */
+    #reader {
+      padding: 8px !important;
+    }
+    #reader video {
+      border-radius: 10px;
+    }
+
+    /* Make gate selector more touch-friendly */
+    .scanner-gate-select select {
+      min-height: 44px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+  }
+
+  /* ── Admin layout — hide sidebar text on small tablets ──────────── */
+  @media (max-width: 1023px) {
+    .sidebar-label {
+      display: none;
+    }
+  }
+
+  /* ── Visitor form — full-width stacked layout on mobile ─────────── */
+  @media (max-width: 639px) {
+    .visitor-form-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* ── Photo capture — taller viewport on mobile for easier capture ── */
+  @media (max-width: 639px) {
+    .photo-capture-viewport {
+      aspect-ratio: 3 / 4 !important; /* portrait crop on phones */
+    }
+  }
+
+  /* ── QR display — larger on mobile so visitor can show it ────────── */
+  @media (max-width: 639px) {
+    .qr-display-wrapper svg,
+    .qr-display-wrapper canvas {
+      width: 220px !important;
+      height: 220px !important;
+    }
+  }
+
   /* Print styles for visitor badges */
   @media print {
     body * { visibility: hidden; }
@@ -155,6 +252,22 @@
     animation: pulse-glow 2s ease-in-out infinite;
   }
 
+  /* Safe-area bottom padding — use on fixed bottom bars */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Safe-area top padding — use on fixed headers */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Scrollable container that works smoothly on iOS */
+  .scroll-ios {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+
   /* Respect users who prefer reduced motion */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -164,6 +277,202 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+/* ============================================================================
+   Mobile-first responsive overrides
+   ============================================================================ */
+
+/* ── Header / TopBar ───────────────────────────────────────────────────────── */
+@media (max-width: 639px) {
+  /* Keep header at a comfortable height on phones */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    /* Top safe area for Dynamic Island / notch */
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Prevent text overflow in header titles */
+  header span, header h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 50vw;
+  }
+}
+
+/* ── Cards — remove side margins on very small phones ──────────────────────── */
+@media (max-width: 374px) {
+  .rounded-2xl, .rounded-xl {
+    border-radius: 12px;
+  }
+}
+
+/* ── Inputs — proper sizing and focus on mobile ─────────────────────────────── */
+@media (max-width: 639px) {
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+    min-height: 44px;
+    border-radius: 10px;
+  }
+
+  textarea {
+    min-height: 80px;
+  }
+}
+
+/* ── Buttons — full-width on mobile in forms ──────────────────────────────── */
+@media (max-width: 639px) {
+  /* Only buttons that are already block-level or in flex column */
+  .btn-mobile-full {
+    width: 100% !important;
+  }
+
+  /* All primary action buttons in forms should feel chunky */
+  button[type="submit"],
+  .btn-primary {
+    min-height: 48px;
+    font-size: 15px;
+  }
+}
+
+/* ── Scanner page — tighter layout on phones ────────────────────────────────── */
+@media (max-width: 639px) {
+  /* Reduce bottom padding since we have safe area */
+  .scanner-page {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  /* QR reader box: make it feel native */
+  #reader > div {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide the noisy html5-qrcode branding/borders */
+  #reader img[alt="Info icon"],
+  #reader > div > div:last-child {
+    display: none !important;
+  }
+}
+
+/* ── Admin sidebar — bottom nav on mobile ──────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Sidebar becomes a fixed bottom tab bar */
+  .admin-sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto !important;
+    height: auto;
+    flex-direction: row !important;
+    border-right: none !important;
+    border-top: 1px solid #e5e5e5;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 50;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: white;
+  }
+
+  .admin-sidebar nav {
+    flex-direction: row !important;
+    width: 100%;
+    justify-content: space-around;
+    padding: 0;
+    gap: 0;
+  }
+
+  /* Each nav item becomes a column */
+  .admin-sidebar a,
+  .admin-sidebar button {
+    flex-direction: column !important;
+    gap: 2px !important;
+    font-size: 10px !important;
+    padding: 8px 4px !important;
+    min-width: 56px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0 !important;
+    min-height: 56px;
+  }
+
+  /* Admin content area: account for bottom nav */
+  .admin-content {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ── Visitor app — centered card with max width ─────────────────────────────── */
+@media (max-width: 639px) {
+  .visitor-app-card {
+    border-radius: 16px 16px 0 0 !important;
+    min-height: calc(100dvh - 80px);
+  }
+}
+
+/* ── Landing/login page — comfortable on phone ──────────────────────────────── */
+@media (max-width: 639px) {
+  .landing-card {
+    margin: 12px;
+    border-radius: 20px;
+  }
+
+  .landing-logo {
+    width: 56px !important;
+    height: 56px !important;
+  }
+}
+
+/* ── Modals — slide up from bottom on mobile ────────────────────────────────── */
+@media (max-width: 639px) {
+  /* Overlay becomes dark full-screen */
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  /* Panel slides up like a native sheet */
+  .modal-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: sheet-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* ── Tables — horizontal scroll on mobile ──────────────────────────────────── */
+@media (max-width: 767px) {
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+  }
+
+  table {
+    min-width: 520px;
+  }
+}
+
+/* ── Stats cards — 2-column grid on mobile ──────────────────────────────────── */
+@media (max-width: 639px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
 }
 
@@ -202,4 +511,10 @@
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50%      { transform: translateY(-4px); }
+}
+
+/* Mobile bottom-sheet slide-up animation */
+@keyframes sheet-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
