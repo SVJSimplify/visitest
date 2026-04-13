@@ -239,25 +239,28 @@ export default function Scanner() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-50 pb-16">
+    <div className="min-h-screen bg-ink-50 scanner-page" style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}>
       {/* Header */}
-      <header className="bg-white border-b border-ink-200">
+      <header className="bg-white border-b border-ink-200 sticky top-0 z-40" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="h-1 bg-gradient-to-r from-brand-800 via-gold-400 to-brand-800" />
         <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="text-sm font-medium text-ink-600 hover:text-ink-900 inline-flex items-center gap-1">
+          <button onClick={() => navigate(-1)} className="text-sm font-medium text-ink-600 hover:text-ink-900 inline-flex items-center gap-1.5 min-h-[44px] min-w-[44px]">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-            Back
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <span className="text-sm font-semibold text-ink-900 tracking-tight">Security Scanner</span>
-          <button onClick={handleSignOut} className="text-xs font-semibold text-brand-800 hover:text-brand-900">
+          <div className="flex flex-col items-center">
+            <span className="text-sm font-semibold text-ink-900 tracking-tight">Security Scanner</span>
+            <span className="text-[10px] text-ink-400 font-medium">{gate}</span>
+          </div>
+          <button onClick={handleSignOut} className="text-xs font-semibold text-brand-800 hover:text-brand-900 min-h-[44px] px-2">
             Sign out
           </button>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 pt-6">
+      <main className="max-w-md mx-auto px-3 sm:px-4 pt-4">
         {/* Gate selector */}
-        <div className="bg-white rounded-xl border border-ink-200 shadow-card p-4 mb-4">
+        <div className="bg-white rounded-xl border border-ink-200 shadow-card p-3 sm:p-4 mb-3 scanner-gate-select">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-500 mb-1.5">Active gate</div>
           <Select value={gate} onChange={(e) => setGate(e.target.value)}>
             {gates.map((g) => (
@@ -268,28 +271,36 @@ export default function Scanner() {
 
         {/* Scanner viewport */}
         <div className="bg-white rounded-2xl border border-ink-200 shadow-card overflow-hidden">
-          <div className="px-5 py-4 border-b border-ink-200 flex items-center justify-between">
+          <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-ink-200 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-ink-900 tracking-tight">Scan visitor QR pass</h2>
-              <p className="text-[11px] text-ink-500 mt-0.5">Point camera at the QR shown by the visitor.</p>
+              <p className="text-[11px] text-ink-500 mt-0.5 hidden sm:block">Point camera at the QR shown by the visitor.</p>
             </div>
             <button
               onClick={() => setCameraFacing(f => f === 'environment' ? 'user' : 'environment')}
-              className="flex items-center gap-1.5 text-xs font-semibold text-brand-800 hover:text-brand-900 border border-ink-200 rounded-lg px-3 py-1.5"
+              className="flex items-center gap-1.5 text-xs font-semibold text-brand-800 hover:text-brand-900 border border-ink-200 rounded-lg px-3 py-2 min-h-[40px] active:bg-ink-50"
               title="Flip camera"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                 <circle cx="12" cy="13" r="4"/>
               </svg>
-              {cameraFacing === 'environment' ? 'Front cam' : 'Back cam'}
+              <span className="hidden xs:inline">{cameraFacing === 'environment' ? 'Front' : 'Back'}</span>
             </button>
           </div>
-          <div id="reader" className="p-4 [&_video]:rounded-lg [&_video]:!max-w-full [&_img]:hidden" />
+
+          {/* QR Reader — clean on mobile, no extra borders */}
+          <div
+            id="reader"
+            className="[&_video]:rounded-lg [&_video]:!max-w-full [&_img]:hidden [&_div[style*='border']]:!border-0 [&_div[style*='box-shadow']]:!shadow-none"
+            style={{ padding: '12px' }}
+          />
+
+          {/* Scan result banner */}
           {scanResult && (
             <div
               className={
-                'mx-4 mb-4 px-4 py-2.5 rounded-lg text-sm font-semibold text-center ' +
+                'mx-3 mb-3 px-4 py-3 rounded-xl text-sm font-semibold text-center animate-rise ' +
                 (scanResult.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
                  scanResult.type === 'warn'    ? 'bg-amber-50 text-amber-800 border border-amber-200' :
                                                  'bg-rose-50 text-rose-800 border border-rose-200')
@@ -298,38 +309,61 @@ export default function Scanner() {
               {scanResult.message}
             </div>
           )}
+
+          {/* Idle hint */}
+          {!scanResult && (
+            <p className="text-center text-[11px] text-ink-400 pb-3 px-4 sm:hidden">
+              Point at visitor's QR pass to scan
+            </p>
+          )}
         </div>
+
+        {/* Camera error */}
+        {errMsg && !activeVisitor && (
+          <div className="mt-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-800 font-medium animate-rise">
+            {errMsg}
+          </div>
+        )}
       </main>
 
-      {/* Check-in / out modal */}
+      {/* Check-in / out modal — bottom sheet on mobile */}
       <Modal
         open={!!activeVisitor}
         onClose={closeFlow}
         size="md"
-        title={activeMode === 'in' ? 'Check in visitor' : 'Check out visitor'}
+        title={activeMode === 'in' ? '✅ Check in visitor' : '🚪 Check out visitor'}
         subtitle={activeMode === 'in'
           ? 'Verify identity and capture photo at the gate.'
-          : 'Confirm exit. Optional photo for verification.'}
+          : 'Confirm exit and capture photo.'}
       >
         {activeVisitor && (
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 p-3 bg-ink-50 rounded-lg border border-ink-200">
+          <div className="space-y-3 sm:space-y-4">
+
+            {/* Visitor identity card */}
+            <div className="flex items-start gap-3 p-3 bg-ink-50 rounded-xl border border-ink-200">
               {activeVisitor.photo_url ? (
                 <img src={activeVisitor.photo_url} alt="" className="w-14 h-14 rounded-lg object-cover ring-1 ring-ink-200 flex-shrink-0" />
               ) : (
-                <div className="w-14 h-14 rounded-lg bg-ink-200 flex items-center justify-center text-ink-500 font-bold flex-shrink-0">
+                <div className="w-14 h-14 rounded-lg bg-brand-100 flex items-center justify-center text-brand-800 font-bold text-lg flex-shrink-0">
                   {activeVisitor.name?.slice(0, 2).toUpperCase()}
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-ink-900 truncate">{activeVisitor.name}</div>
-                <div className="text-xs text-ink-500 mt-0.5">{activeVisitor.role} · {activeVisitor.phone}</div>
-                <div className="text-xs text-ink-700 mt-1">{activeVisitor.purpose}</div>
-                {activeVisitor.meet && <div className="text-xs text-ink-500 mt-0.5">Meeting: <span className="text-ink-900 font-medium">{activeVisitor.meet}</span></div>}
+                <div className="font-semibold text-ink-900 truncate text-base">{activeVisitor.name}</div>
+                <div className="text-xs text-ink-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                  <span className="bg-ink-200 text-ink-700 px-1.5 py-0.5 rounded font-medium">{activeVisitor.role}</span>
+                  <span>{activeVisitor.phone}</span>
+                </div>
+                <div className="text-xs text-ink-700 mt-1 font-medium">{activeVisitor.purpose}</div>
+                {activeVisitor.meet && (
+                  <div className="text-xs text-ink-500 mt-0.5">
+                    Meeting: <span className="text-ink-900 font-semibold">{activeVisitor.meet}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Visitor history (feature #4) */}
+            {/* Visit history */}
             {history && history.total_visits > 0 && (
               <div className="text-xs bg-brand-50 border border-brand-100 rounded-lg px-3 py-2 text-brand-900">
                 <strong>{history.total_visits}</strong> prior visit{history.total_visits === 1 ? '' : 's'}.
@@ -337,7 +371,7 @@ export default function Scanner() {
               </div>
             )}
 
-            {/* Student info for parent role (feature #8) */}
+            {/* Student info for parent role */}
             {studentInfo && (
               <div className="text-xs bg-gold-100 border border-gold-400/40 rounded-lg px-3 py-2 text-brand-900">
                 Picking up <strong>{studentInfo.student_name}</strong>
@@ -345,31 +379,31 @@ export default function Scanner() {
               </div>
             )}
 
-            {activeMode === 'in' ? (
+            {/* ── Photo capture — for both check-in & check-out ── */}
+            <div className="border-t border-ink-100 pt-3">
+              <div className="flex items-center gap-2 mb-2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-brand-800 flex-shrink-0">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span className="text-xs font-semibold text-ink-700">
+                  {activeMode === 'in' ? 'Capture entry photo' : 'Capture exit photo'}
+                </span>
+                {activeVisitor.photo_url && activeMode === 'out' && (
+                  <span className="ml-auto text-[10px] text-ink-400 italic">Entry photo on file</span>
+                )}
+              </div>
               <PhotoCapture
                 facing="environment"
                 onCapture={completeWithPhoto}
                 onCancel={closeFlow}
                 onSkip={skipPhoto}
-                confirmLabel={busy ? 'Saving…' : 'Confirm check-in'}
+                confirmLabel={busy ? 'Saving…' : activeMode === 'in' ? 'Confirm check-in' : 'Confirm checkout'}
               />
-            ) : (
-              <>
-                {activeVisitor.photo_url && (
-                  <div className="text-xs text-ink-500 -mb-2">Check-in photo for verification:</div>
-                )}
-                <PhotoCapture
-                  facing="environment"
-                  onCapture={completeWithPhoto}
-                  onCancel={closeFlow}
-                  onSkip={skipPhoto}
-                  confirmLabel={busy ? 'Saving…' : 'Confirm checkout'}
-                />
-              </>
-            )}
+            </div>
 
             {errMsg && (
-              <div className="text-sm text-rose-800 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">{errMsg}</div>
+              <div className="text-sm text-rose-800 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 animate-rise">{errMsg}</div>
             )}
           </div>
         )}
