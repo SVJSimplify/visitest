@@ -43,7 +43,7 @@ export default function App() {
             {/* ── Authenticated areas ──────────────────────────────── */}
             <Route path="/scan" element={<Scanner />} />
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index              element={<Navigate to="visitors" replace />} />
+              <Route index             element={<Navigate to="visitors" replace />} />
               <Route path="visitors"   element={<AdminVisitors />} />
               <Route path="invites"    element={<AdminInvites />} />
               <Route path="staff"      element={<AdminStaff />} />
