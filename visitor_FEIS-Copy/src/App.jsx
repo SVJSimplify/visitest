@@ -18,6 +18,7 @@ import AdminStudents from './pages/AdminStudents'
 import AdminWatchlist from './pages/AdminWatchlist'
 import AdminReports from './pages/AdminReports'
 import AdminLogs from './pages/AdminLogs'
+import AdminManagers from './pages/AdminManagers'
 
 export default function App() {
   return (
@@ -25,33 +26,33 @@ export default function App() {
       <AuthProvider>
         <ToastProvider>
           <Routes>
-            {/* ── Public ───────────────────────────────────────────────── */}
-            {/* Root is the visitor app (the only page meant to be discoverable) */}
+            {/* ── Public ───────────────────────────────────────────── */}
             <Route path="/"              element={<VisitorApp />} />
             <Route path="/app"           element={<Navigate to="/" replace />} />
             <Route path="/invite/:token" element={<InviteAccept />} />
             <Route path="/join/:token"   element={<GroupInvitePage />} />
 
-            {/* ── Hidden login routes (slugs from .env) ────────────────── */}
-            {/* Admin login — only people who know the slug can find it */}
+            {/* ── Hidden login routes (slugs from .env) ────────────── */}
             <Route path={`/${ADMIN_LOGIN_SLUG}`}    element={<Landing />} />
             <Route path={`/${SECURITY_LOGIN_SLUG}`} element={<SecurityLogin />} />
 
-            {/* ── Authenticated areas ──────────────────────────────────── */}
+            {/* ── Authenticated areas ──────────────────────────────── */}
             <Route path="/scan" element={<Scanner />} />
 
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index            element={<Navigate to="visitors" replace />} />
-              <Route path="visitors"  element={<AdminVisitors />} />
-              <Route path="invites"   element={<AdminInvites />} />
-              <Route path="staff"     element={<AdminStaff />} />
-              <Route path="students"  element={<AdminStudents />} />
-              <Route path="watchlist" element={<AdminWatchlist />} />
-              <Route path="reports"   element={<AdminReports />} />
-              <Route path="logs"      element={<AdminLogs />} />
+              <Route index              element={<Navigate to="visitors" replace />} />
+              <Route path="visitors"   element={<AdminVisitors />} />
+              <Route path="invites"    element={<AdminInvites />} />
+              <Route path="staff"      element={<AdminStaff />} />
+              <Route path="students"   element={<AdminStudents />} />
+              <Route path="watchlist"  element={<AdminWatchlist />} />
+              <Route path="reports"    element={<AdminReports />} />
+              <Route path="logs"       element={<AdminLogs />} />
+              {/* System-only — only superadmin can use this */}
+              <Route path="managers"   element={<AdminManagers />} />
             </Route>
 
-            {/* ── Catch-all: anything unknown goes to the visitor app ──── */}
+            {/* ── Catch-all ────────────────────────────────────────── */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ToastProvider>
