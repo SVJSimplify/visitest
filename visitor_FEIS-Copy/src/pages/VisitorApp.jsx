@@ -118,34 +118,50 @@ export default function VisitorApp() {
   const onPhoto      = async (blob) => { await submit(blob) }
   const onSkipPhoto  = async ()      => { await submit(null) }
 
-  const submit = async (blob) => {
-    setBusy(true); setErr('')
-    try {
-      let photoUrl = null
-      const { data, error } = await supabase.rpc('create_visitor', {
-        p_role: role, p_name: name.trim(), p_phone: phone,
-        p_purpose: purpose.trim(), p_meet: meet.trim() || null,
-        p_notes: notes.trim() || null, p_photo_url: null,
-        p_invite_token: inviteToken || null,
-      })
-      if (error) { setErr(explainError(error)); return }
-      const created = Array.isArray(data) ? data[0] : data
-      if (!created) { setErr('Could not create visitor.'); return }
+ const submit = async (blob) => {
+  setBusy(true); setErr('')
+  try {
+    const { data, error } = await supabase.rpc('create_visitor', {
+      p_role: role, p_name: name.trim(), p_phone: phone,
+      p_purpose: purpose.trim(), p_meet: meet.trim() || null,
+      p_notes: notes.trim() || null, p_photo_url: null,
+      p_invite_token: inviteToken || null,
+    })
+    if (error) { setErr(explainError(error)); return }
+    const created = Array.isArray(data) ? data[0] : data
+    if (!created) { setErr('Could not create visitor.'); return }
 
-      if (blob) {
-        const token = created.qr_token ?? created.id
-        const path  = `entry/${sanitizeFilename(created.name)}_${token.slice(0, 8)}.jpg`
-        const { error: upErr } = await supabase.storage
-          .from(STORAGE_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: true })
-        if (!upErr) {
-          const { data: { publicUrl } } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path)
-          photoUrl = publicUrl
-          const { error: photoErr } = await supabase.rpc('set_visitor_photo', {
-            p_token: created.qr_token, p_photo_url: publicUrl,
-          })
-          if (photoErr) console.warn('Could not attach photo:', photoErr.message)
-        }
+    // ✅ Show QR instantly — don't block on photo upload
+    setVisitor(created)
+    saveToHistory(created)
+    refreshHistory()
+    setStage('done')
+    setBusy(false)
+
+    // ⬇️ Photo upload happens silently in the background
+    if (blob) {
+      const token = created.qr_token ?? created.id
+      const path  = `entry/${sanitizeFilename(created.name)}_${token.slice(0, 8)}.jpg`
+      const { error: upErr } = await supabase.storage
+        .from(STORAGE_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+      if (!upErr) {
+        const { data: { publicUrl } } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path)
+        const { error: photoErr } = await supabase.rpc('set_visitor_photo', {
+          p_token: created.qr_token, p_photo_url: publicUrl,
+        })
+        if (photoErr) console.warn('Could not attach photo to visitor row:', photoErr.message)
+        // Silently update photo in UI + history once ready
+        const withPhoto = { ...created, photo_url: publicUrl }
+        setVisitor(withPhoto)
+        saveToHistory(withPhoto)
+        refreshHistory()
       }
+    }
+  } catch (e) {
+    setErr(explainError(e))
+    setBusy(false)
+  }
+}
 
       const finalVisitor = { ...created, photo_url: photoUrl ?? created.photo_url }
       setVisitor(finalVisitor)
