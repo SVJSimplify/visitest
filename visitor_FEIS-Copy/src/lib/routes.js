@@ -2,7 +2,6 @@ const rawAdmin    = import.meta.env.VITE_ADMIN_SLUG    || 'admin-login'
 const rawSecurity = import.meta.env.VITE_SECURITY_SLUG || 'security-login'
 const rawTeacher  = import.meta.env.VITE_TEACHER_SLUG  || 'teacher-login'
 
-// Strip any accidental leading slash so paths concatenate cleanly
 const clean = (s) => String(s).replace(/^\/+/, '').replace(/\/+$/, '')
 
 export const ADMIN_LOGIN_SLUG    = clean(rawAdmin)
