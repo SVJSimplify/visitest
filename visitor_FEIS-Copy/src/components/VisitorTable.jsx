@@ -6,10 +6,13 @@ import Button from './ui/Button'
 
 /**
  * VisitorTable
- * ----------------------------------------------------------------------
- * Issue #2 fix: every cell uses {value} interpolation, which React
- * escapes automatically. Zero innerHTML usage anywhere. The original
- * loadVisitors() XSS surface is gone.
+ * ─────────────────────────────────────────────────────────────────────
+ * Shows a P1 (Group Pass) badge next to any visitor who registered via
+ * a group / multi-use invite link. The badge appears in the Visitor
+ * column next to their name.
+ *
+ * A visitor is a group-pass visitor when:
+ *   v.group_pass === true   (set by DB when invite is multi_use)
  */
 export default function VisitorTable({ rows, onPhoto, onForceCheckout }) {
   const [openMenu, setOpenMenu] = useState(null)
@@ -29,10 +32,7 @@ export default function VisitorTable({ rows, onPhoto, onForceCheckout }) {
         <thead>
           <tr className="border-b border-ink-200">
             {['', 'Visitor', 'Phone', 'Purpose', 'Meet', 'Gate', 'Check-in', 'Check-out', 'Status', ''].map((h) => (
-              <th
-                key={h}
-                className="text-left text-[11px] font-semibold uppercase tracking-wider text-ink-500 px-3 py-3 whitespace-nowrap"
-              >
+              <th key={h} className="text-left text-[11px] font-semibold uppercase tracking-wider text-ink-500 px-3 py-3 whitespace-nowrap">
                 {h}
               </th>
             ))}
@@ -41,6 +41,8 @@ export default function VisitorTable({ rows, onPhoto, onForceCheckout }) {
         <tbody>
           {rows.map((v) => (
             <tr key={v.id} className="border-b border-ink-100 hover:bg-ink-50/60 transition-colors">
+
+              {/* Avatar / photo */}
               <td className="px-3 py-3">
                 {v.photo_url ? (
                   <button
@@ -56,9 +58,34 @@ export default function VisitorTable({ rows, onPhoto, onForceCheckout }) {
                   </div>
                 )}
               </td>
+
+              {/* Name + badges */}
               <td className="px-3 py-3">
-                <div className="font-semibold text-ink-900 flex items-center gap-2">
+                <div className="font-semibold text-ink-900 flex items-center gap-1.5 flex-wrap">
                   {v.name || '—'}
+
+                  {/* P1 — Group Pass badge */}
+                  {v.group_pass && (
+                    <span
+                      title="Registered via group invite link"
+                      className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border"
+                      style={{
+                        background: 'rgba(249,212,35,0.12)',
+                        borderColor: 'rgba(249,212,35,0.5)',
+                        color: '#92640a',
+                      }}
+                    >
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>
+                      P1
+                    </span>
+                  )}
+
+                  {/* Watchlist warning */}
                   {v.watchlist_hit && (
                     <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
                       WATCHLIST
@@ -67,10 +94,9 @@ export default function VisitorTable({ rows, onPhoto, onForceCheckout }) {
                 </div>
                 <div className="text-[11px] text-ink-500 mt-0.5">{v.role}</div>
               </td>
+
               <td className="px-3 py-3 text-ink-700 font-mono text-[12px]">{v.phone || '—'}</td>
-              <td className="px-3 py-3 text-ink-700 max-w-[200px] truncate" title={v.purpose}>
-                {v.purpose || '—'}
-              </td>
+              <td className="px-3 py-3 text-ink-700 max-w-[200px] truncate" title={v.purpose}>{v.purpose || '—'}</td>
               <td className="px-3 py-3 text-ink-700">{v.meet || '—'}</td>
               <td className="px-3 py-3 text-ink-500 text-[12px] capitalize">{v.gate?.replace('gate-', '') || '—'}</td>
               <td className="px-3 py-3 text-ink-700 whitespace-nowrap">
@@ -79,11 +105,9 @@ export default function VisitorTable({ rows, onPhoto, onForceCheckout }) {
               </td>
               <td className="px-3 py-3 text-ink-700 whitespace-nowrap text-[12px]">{fmtTime(v.checked_out_at)}</td>
               <td className="px-3 py-3"><StatusBadge status={v.status} /></td>
-              <td className="px-3 py-3 relative">
+              <td className="px-3 py-3">
                 {v.status === 'INSIDE' && (
-                  <Button size="sm" variant="ghost" onClick={() => onForceCheckout?.(v)}>
-                    Force out
-                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => onForceCheckout?.(v)}>Force out</Button>
                 )}
               </td>
             </tr>
